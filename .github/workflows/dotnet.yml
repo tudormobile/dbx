@@ -1,0 +1,160 @@
+name: Build and Deploy
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ "main" ]
+    tags: [ "v*" ]
+  pull_request:
+    branches: [ "main" ]
+
+permissions:
+  contents: read
+  packages: read
+
+jobs:
+  ci:
+    name: Build and Test Library
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@c2fa09f4bde5ebb9d1777cf28262a3eb3db3ced7 # v5.2.0
+        with:
+          dotnet-version: 10.0.100
+        env:
+          NUGET_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup GitVersion
+        uses: gittools/actions/gitversion/setup@71a79f7569b981036febd9ce5870f87e069928e7 # v4.3.3
+        with:
+          versionSpec: '6.4.0'
+
+      - name: Determine Version
+        id: version_step
+        uses: gittools/actions/gitversion/execute@71a79f7569b981036febd9ce5870f87e069928e7 # v4.3.3
+        with:
+          updateProjectFiles: true
+
+      - name: Unit tests
+        run: |
+          cd src
+          dotnet test --filter "TestCategory!=Integration" --coverage --report-trx
+
+      - name: Build
+        run: |
+          cd src
+          dotnet build -c Release
+
+      - name: Unit Test Annotations
+        run: |
+          cd src
+          if (dotnet tool list -g | Select-String 'dotnet-coverage') {
+            dotnet tool update -g dotnet-Coverage --version 18.1.0
+          } else {
+            dotnet tool install -g dotnet-Coverage --version 18.1.0
+          }
+          if (dotnet tool list -g | Select-String 'dotnet-reportgenerator-globaltool') {
+            dotnet tool update -g dotnet-reportgenerator-globaltool --version 5.4.3
+          } else {
+            dotnet tool install -g dotnet-reportgenerator-globaltool --version 5.4.3
+          }
+          dotnet-coverage merge **\*.coverage --remove-input-files --output-format xml --output output.xml
+          reportgenerator -reports:"output.xml" -targetdir:"output" -reporttypes:"MarkdownSummaryGithub"
+          echo "### Test Results" >> "$env:GITHUB_STEP_SUMMARY"
+          Get-ChildItem -Recurse -Filter *.trx | ForEach-Object { Get-Content $_.FullName | Select-String 'executed=\"(\d+)\" passed=\"(\d+)\" failed=\"(\d+)\"' | ForEach-Object { ":purple_circle: Tests: " + $_.Matches[0].Groups[1].Value + " :green_circle: Passed: " + $_.Matches[0].Groups[2].Value + " :red_circle: Failed: " + $_.Matches[0].Groups[3].Value } } >> "$env:GITHUB_STEP_SUMMARY"
+          echo "### Code Coverage" >> "$env:GITHUB_STEP_SUMMARY"
+          Get-Content output\SummaryGithub.md | Select-String '<summary>(.+%)</summary>' | ForEach-Object { $_.Matches[0].Groups[1].Value } >> "$env:GITHUB_STEP_SUMMARY"
+
+      - name: Upload Package
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        with:
+          name: package
+          path: src\**\bin\Release\*.nupkg
+
+      - name: Create Zip for Release
+        run: |
+          $tempDir = New-Item -ItemType Directory -Path (Join-Path $env:TEMP ([System.Guid]::NewGuid()))
+          Get-ChildItem -Path src -Recurse -Filter *.nupkg | Where-Object { $_.FullName -like '*\bin\release\*' } | ForEach-Object { Copy-Item $_.FullName -Destination $tempDir }
+          Compress-Archive -Path $tempDir\* -Destination (Join-Path $env:GITHUB_WORKSPACE 'package.zip') -Force
+          Remove-Item $tempDir -Recurse -Force
+
+      - name: Upload Release Zip
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        with:
+          name: release-zip
+          path: package.zip
+
+  release:
+    name: Create Stable Release and Publish Packages
+    if: ${{ github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')) }}
+    needs: ci
+    runs-on: windows-latest
+    environment: production-release
+    permissions:
+      contents: write
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
+      - name: Setup .NET
+        uses: actions/setup-dotnet@c2fa09f4bde5ebb9d1777cf28262a3eb3db3ced7 # v5.2.0
+        with:
+          dotnet-version: 10.0.100
+
+      - name: Setup GitVersion
+        uses: gittools/actions/gitversion/setup@71a79f7569b981036febd9ce5870f87e069928e7 # v4.3.3
+        with:
+          versionSpec: '6.4.0'
+
+      - name: Determine Version
+        id: release_version_step
+        uses: gittools/actions/gitversion/execute@71a79f7569b981036febd9ce5870f87e069928e7 # v4.3.3
+
+      - name: Resolve Release Tag
+        id: release_tag
+        shell: pwsh
+        run: |
+          "release_tag=v${{ steps.release_version_step.outputs.semVer }}" >> $env:GITHUB_OUTPUT
+
+      - name: Download Package Artifact
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: package
+          path: package
+
+      - name: Download Release Zip Artifact
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: release-zip
+          path: release-zip
+
+      - name: Create or Update Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_TAG: ${{ steps.release_tag.outputs.release_tag }}
+        run: |
+          $zipPath = Join-Path $env:GITHUB_WORKSPACE 'release-zip\package.zip'
+          gh release view "$env:RELEASE_TAG" *> $null
+          if ($LASTEXITCODE -eq 0) {
+            echo "Release exists. Uploading latest package asset."
+            gh release upload "$env:RELEASE_TAG" "$zipPath#package" --clobber
+          } else {
+            echo "Creating release $env:RELEASE_TAG"
+            gh release create "$env:RELEASE_TAG" "$zipPath#package" --title "$env:RELEASE_TAG" --generate-notes
+          }
+
+      - name: Publish package
+        run: |
+          Get-ChildItem -Path package -Recurse -Filter *.nupkg | ForEach-Object {
+            Write-Host "Pushing $($_.FullName)"
+            dotnet nuget push $_.FullName --source "https://nuget.pkg.github.com/tudormobile/index.json" --api-key "${{ secrets.GITHUB_TOKEN }}" --skip-duplicate
+          }
