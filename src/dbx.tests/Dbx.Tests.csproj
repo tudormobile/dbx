@@ -1,0 +1,15 @@
+﻿<Project Sdk="MSTest.Sdk/4.1.0">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\dbx\Dbx.csproj" />
+    <Using Include="System.Globalization" />
+    <Using Include="Tudormobile.Dbx" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Update="Microsoft.Testing.Extensions.CodeCoverage" Version="18.5.2" />
+  </ItemGroup>
+</Project>

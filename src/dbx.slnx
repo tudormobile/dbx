@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="dbx/Dbx.csproj" />
+  <Project Path="dbx.tests/Dbx.Tests.csproj" />
+  <Project Path="host/host.csproj" />
+</Solution>

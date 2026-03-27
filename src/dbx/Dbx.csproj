@@ -1,0 +1,34 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <IsPackable>true</IsPackable>
+    <AssemblyName>Tudormobile.$(MSBuildProjectName)</AssemblyName>
+    <RootNamespace>Tudormobile.$(MSBuildProjectName)</RootNamespace>
+    <Product>Database Rest Extensions</Product>
+    <Description>Web Services library for Data Repository Extensions.</Description>
+    <PackageTags>data store db lightweight-db</PackageTags>
+    <PackageProjectUrl>https://tudormobile.github.io/dbx/</PackageProjectUrl>
+    <PackageReleaseNotes>https://github.com/tudormobile/dbx/releases</PackageReleaseNotes>
+    <RepositoryUrl>https://github.com/tudormobile/dbx</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <Company>Tudormobile</Company>
+    <Authors>WH Tudor</Authors>
+    <Copyright>Copyright © 2026 Bill Tudor</Copyright>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <GenerateDocumentationFile>True</GenerateDocumentationFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" />
+    <InternalsVisibleTo Include="$(MSBuildProjectName).Tests" />
+  </ItemGroup>
+  <PropertyGroup Condition="'$(Configuration)'=='Release'">
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+  </PropertyGroup>
+</Project>

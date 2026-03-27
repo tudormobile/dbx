@@ -1,0 +1,6 @@
+@dbx_HostAddress = http://localhost:5284
+
+GET {{dbx_HostAddress}}/api/v1/dbx/status
+Accept: application/json
+
+###
