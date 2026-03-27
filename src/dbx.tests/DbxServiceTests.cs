@@ -1,9 +1,8 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
-using System.Diagnostics.CodeAnalysis;
+using System.Text.Json;
 
 namespace Dbx.Tests;
 
@@ -11,6 +10,154 @@ namespace Dbx.Tests;
 public class DbxServiceTests
 {
     public TestContext TestContext { get; set; }    // MSTest will set this property
+
+    [TestMethod]
+    public async Task UpdateItemAsync_WithMissingItem_Logs()
+    {
+        var id = Path.GetRandomFileName();
+        var itemId = "0000111122223333444455556666777700001111222233334444555566667777";
+        var logger = new MockLogger<IDbxService>();
+        var options = Options.Create(new DbxOptions());
+        var json = @"{
+""name"": ""John"",
+""last"": ""Doe""
+}";
+        var item = JsonElement.Parse(json);
+        var dbx = new DbxService(logger, new HttpContextAccessor(), options);
+
+        var result = await dbx.UpdateItemAsync(id, itemId, item, TestContext.CancellationToken);
+
+        Assert.IsFalse(result.Success);
+        Assert.Contains("UpdateItemAsync", logger.LoggedMessage!);
+    }
+
+    [TestMethod]
+    public async Task CreateListUpdateGetReplaceGetDeleteListItemAsync_AllWorks()
+    {
+        var id = Path.GetRandomFileName();
+        try
+        {
+            var dbx = BuildService();
+            var json = @"{
+""name"": ""John"",
+""last"": ""Doe""
+}";
+            var updateJson = @"{""last"": ""Smith""}";
+            var item = JsonElement.Parse(json);
+            var update = JsonElement.Parse(updateJson);
+
+            // create
+            var result = await dbx.CreateItemAsync(id, item, TestContext.CancellationToken);
+            Assert.IsTrue(result.Success);
+            Assert.IsNotNull(result.Data);
+            string itemId = result.Data.ToString()!;
+
+            // list
+            result = await dbx.ListItemsAsync(id, TestContext.CancellationToken);
+            Assert.IsNotNull(result.Data);
+            Assert.Contains(itemId, (List<string>)result.Data);
+
+            // update
+            result = await dbx.UpdateItemAsync(id, itemId, update, TestContext.CancellationToken);
+            Assert.IsTrue(result.Success);
+            Assert.IsNotNull(result.Data);
+            Assert.AreEqual(itemId, result.Data);
+
+            // get
+            result = await dbx.GetItemAsync(id, itemId, TestContext.CancellationToken);
+            Assert.IsTrue(result.Success);
+            Assert.IsNotNull(result.Data);
+            Assert.Contains("Smith", result.Data.ToString()!);
+            Assert.Contains("John", result.Data.ToString()!);
+            Assert.DoesNotContain("Doe", result.Data.ToString()!);
+
+            // replace
+            result = await dbx.ReplaceItemAsync(id, itemId, item, TestContext.CancellationToken);
+            Assert.IsTrue(result.Success);
+            Assert.IsNotNull(result.Data);
+            Assert.AreEqual(itemId, result.Data);
+
+            // get
+            result = await dbx.GetItemAsync(id, itemId, TestContext.CancellationToken);
+            Assert.IsTrue(result.Success);
+            Assert.IsNotNull(result.Data);
+            Assert.DoesNotContain("Smith", result.Data.ToString()!);
+            Assert.Contains("John", result.Data.ToString()!);
+            Assert.Contains("Doe", result.Data.ToString()!);
+
+            // delete
+            result = await dbx.DeleteItemAsync(id, itemId, TestContext.CancellationToken);
+            Assert.IsTrue(result.Success);
+            Assert.IsNotNull(result.Data);
+            Assert.AreEqual(itemId, result.Data);
+
+            // list
+            result = await dbx.ListItemsAsync(id, TestContext.CancellationToken);
+            Assert.IsNotNull(result.Data);
+            Assert.IsEmpty((List<string>)result.Data);
+        }
+        finally
+        {
+            var dir = Path.Combine("data", id);
+            if (Directory.Exists(dir))
+            {
+                Directory.Delete(dir, true);
+            }
+        }
+    }
+
+    [TestMethod]
+    public async Task GetItemAsync_WithMissingItem_ReturnsErrorResult()
+    {
+        var id = Path.GetRandomFileName();
+        var dbx = BuildService();
+        var itemId = "0000111122223333444455556666777700001111222233334444555566667777";
+        var result = await dbx.GetItemAsync(id, itemId, TestContext.CancellationToken);
+        Assert.IsFalse(result.Success);
+        Assert.IsNotNull(result.Data);
+        Assert.Contains(id, result.Data.ToString()!);
+        Assert.Contains(itemId, result.Data.ToString()!);
+    }
+
+    [TestMethod]
+    public async Task ListItemsAsync_CreatesItem()
+    {
+        var id = Path.GetRandomFileName();
+        var dbx = BuildService();
+        var result = await dbx.ListItemsAsync(id, TestContext.CancellationToken);
+
+        Assert.IsTrue(result.Success);
+        Assert.IsNotNull(result.Data);
+        Assert.IsEmpty((string[])result.Data);
+    }
+
+    [TestMethod]
+    public async Task CreateItemAsync_CreatesItem()
+    {
+        var id = Path.GetRandomFileName();
+        try
+        {
+            var dbx = BuildService();
+            var json = @"{
+""name"": ""John"",
+""last"": ""Doe""
+}";
+            var item = JsonElement.Parse(json);
+
+            var result = await dbx.CreateItemAsync(id, item, TestContext.CancellationToken);
+
+            Assert.IsTrue(result.Success);
+            Assert.IsNotNull(result.Data);
+        }
+        finally
+        {
+            var dir = Path.Combine("data", id);
+            if (Directory.Exists(dir))
+            {
+                Directory.Delete(dir, true);
+            }
+        }
+    }
 
     [TestMethod]
     public async Task GetStatusAsync_ReturnsStatus()
@@ -113,24 +260,4 @@ public class DbxServiceTests
         Assert.AreEqual("data", service.DataPath);
     }
 
-}
-
-[ExcludeFromCodeCoverage]
-internal class MockLogger<T> : ILogger<T>
-{
-    public bool MessageWasLogged { get; private set; }
-    public string? LoggedMessage { get; private set; }
-    public LogLevel LoggedLogLevel { get; private set; }
-    public Exception? LoggedException { get; private set; }
-    public bool IsLogLevelEnabled { get; set; } = true;
-    public IDisposable? BeginScope<TState>(TState state) where TState : notnull => null;
-    public bool IsEnabled(LogLevel logLevel) => IsLogLevelEnabled;
-
-    public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
-    {
-        LoggedLogLevel = logLevel;
-        LoggedException = exception;
-        LoggedMessage = formatter(state, exception);
-        MessageWasLogged = true;
-    }
 }
