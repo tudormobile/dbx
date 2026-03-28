@@ -1,6 +1,7 @@
 # dbx - Data storage extensions
 [![Build and Deploy (main)](https://github.com/tudormobile/dbx/actions/workflows/dotnet.yml/badge.svg?branch=main)](https://github.com/tudormobile/dbx/actions/workflows/dotnet.yml)
-[![Publish Docs (main)](https://github.com/tudormobile/dbx/actions/workflows/docs.yml/badge.svg?branch=main)](https://github.com/tudormobile/dbx/actions/workflows/docs.yml)
+![GitHub Issues or Pull Requests](https://img.shields.io/github/issues/tudormobile/dbx)  
+![GitHub Release](https://img.shields.io/github/v/release/tudormobile/dbx)
 [![NuGet](https://img.shields.io/nuget/v/Tudormobile.Dbx.svg)](https://www.nuget.org/packages/Tudormobile.Dbx/)
 [![License](https://img.shields.io/github/license/tudormobile/Dbx)](LICENSE.txt)
 

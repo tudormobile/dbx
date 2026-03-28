@@ -111,13 +111,13 @@ jobs:
           dotnet-version: 10.0.100
 
       - name: Setup GitVersion
-        uses: gittools/actions/gitversion/setup@71a79f7569b981036febd9ce5870f87e069928e7 # v4.3.3
+        uses: gittools/actions/gitversion/setup@v4
         with:
           versionSpec: '6.4.0'
 
       - name: Determine Version
         id: release_version_step
-        uses: gittools/actions/gitversion/execute@71a79f7569b981036febd9ce5870f87e069928e7 # v4.3.3
+        uses: gittools/actions/gitversion/execute@v4
 
       - name: Resolve Release Tag
         id: release_tag

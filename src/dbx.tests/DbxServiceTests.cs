@@ -35,6 +35,7 @@ public class DbxServiceTests
     public async Task CreateListUpdateGetReplaceGetDeleteListItemAsync_AllWorks()
     {
         var id = Path.GetRandomFileName();
+
         try
         {
             var dbx = BuildService();
@@ -47,6 +48,7 @@ public class DbxServiceTests
             var update = JsonElement.Parse(updateJson);
 
             // create
+            Directory.CreateDirectory(Path.Combine("data", id));
             var result = await dbx.CreateItemAsync(id, item, TestContext.CancellationToken);
             Assert.IsTrue(result.Success);
             Assert.IsNotNull(result.Data);
@@ -143,6 +145,7 @@ public class DbxServiceTests
 ""last"": ""Doe""
 }";
             var item = JsonElement.Parse(json);
+            Directory.CreateDirectory(Path.Combine("data", id));
 
             var result = await dbx.CreateItemAsync(id, item, TestContext.CancellationToken);
 

@@ -45,6 +45,7 @@ public class DbxRepositoryTests
         var dataPath = "test-folder";
         var id = "some-id";
         var itemId = "0000111122223333444455556666777788889999aaaabbbbccccddddeeeeffff";
+        Directory.CreateDirectory(Path.Combine(dataPath, id));
         try
         {
             var item = JsonElement.Parse("{\"message\":\"this is a test\"}");
@@ -83,6 +84,7 @@ public class DbxRepositoryTests
         var dataPath = "test-save-read";
         var id = "0000111122223333444455556666777788889999aaaabbbbccccddddeeeeffff";
         var itemId = "111122223333444455556666777788889999aaaabbbbccccddddeeeeffff0000";
+        Directory.CreateDirectory(Path.Combine(dataPath, id));
         try
         {
             var item = JsonElement.Parse("{\"foo\":42}");
@@ -106,6 +108,7 @@ public class DbxRepositoryTests
         var dataPath = "test-exists";
         var id = "0000111122223333444455556666777788889999aaaabbbbccccddddeeeeffff";
         var itemId = "111122223333444455556666777788889999aaaabbbbccccddddeeeeffff0000";
+        Directory.CreateDirectory(Path.Combine(dataPath, id));
         try
         {
             var repository = new DbxRepository(dataPath);
@@ -128,6 +131,7 @@ public class DbxRepositoryTests
         var dataPath = "test-delete";
         var id = "0000111122223333444455556666777788889999aaaabbbbccccddddeeeeffff";
         var itemId = "111122223333444455556666777788889999aaaabbbbccccddddeeeeffff0000";
+        Directory.CreateDirectory(Path.Combine(dataPath, id));
         try
         {
             var repository = new DbxRepository(dataPath);
@@ -163,6 +167,8 @@ public class DbxRepositoryTests
         var id1 = "0000111122223333444455556666777788889999aaaabbbbccccddddeeeeffff";
         var id2 = "111122223333444455556666777788889999aaaabbbbccccddddeeeeffff0000";
         var itemId = "22223333444455556666777788889999aaaabbbbccccddddeeeeffff00001111";
+        Directory.CreateDirectory(Path.Combine(dataPath, id1));
+        Directory.CreateDirectory(Path.Combine(dataPath, id2));
         try
         {
             var repository = new DbxRepository(dataPath);
@@ -201,6 +207,7 @@ public class DbxRepositoryTests
         var id = "0000111122223333444455556666777788889999aaaabbbbccccddddeeeeffff";
         var itemId1 = "111122223333444455556666777788889999aaaabbbbccccddddeeeeffff0000";
         var itemId2 = "22223333444455556666777788889999aaaabbbbccccddddeeeeffff00001111";
+        Directory.CreateDirectory(Path.Combine(dataPath, id));
         try
         {
             var repository = new DbxRepository(dataPath);
@@ -226,6 +233,7 @@ public class DbxRepositoryTests
         var dataPath = "test-overwrite";
         var id = "0000111122223333444455556666777788889999aaaabbbbccccddddeeeeffff";
         var itemId = "111122223333444455556666777788889999aaaabbbbccccddddeeeeffff0000";
+        Directory.CreateDirectory(Path.Combine(dataPath, id));
         try
         {
             var repository = new DbxRepository(dataPath);
