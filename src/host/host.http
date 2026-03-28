@@ -4,3 +4,25 @@ GET {{dbx_HostAddress}}/api/v1/dbx/status
 Accept: application/json
 
 ###
+GET {{dbx_HostAddress}}/api/v1/dbx/test/
+Accept: application/json
+
+###
+POST {{dbx_HostAddress}}/api/v1/dbx/test/
+Accept: application/json
+Content-Type: application/json
+
+{
+  "name": "Joe",
+  "last": "Smith",
+  "age" : 56
+}
+###
+GET {{dbx_HostAddress}}/api/v1/dbx/test/58ad473a8df40df989e3abd56a9e217b48c2139e0ed6e3f7c837a0a79f32dd07
+Accept: application/json
+
+###
+
+
+
+

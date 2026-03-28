@@ -62,9 +62,13 @@ internal class DbxRepository
         ArgumentNullException.ThrowIfNull(id);
         ArgumentNullException.ThrowIfNull(itemId);
         var dir = IdDirectory(id);
-        Directory.CreateDirectory(dir);
-        var json = JsonSerializer.Serialize(item);
-        await File.WriteAllTextAsync(ItemIdFile(id, itemId), json, cancellationToken);
+        if (Directory.Exists(dir))
+        {
+            var json = JsonSerializer.Serialize(item);
+            await File.WriteAllTextAsync(ItemIdFile(id, itemId), json, cancellationToken);
+            return;
+        }
+        throw new FileNotFoundException("Identifier does not exist.");
     }
 
     public Task DeleteAsync(string id, string itemId, CancellationToken cancellationToken = default)
