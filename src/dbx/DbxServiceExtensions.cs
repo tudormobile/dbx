@@ -52,7 +52,9 @@ public static class DbxServiceExtensions
 
         var options = app.Services.GetRequiredService<IOptions<DbxOptions>>().Value;
         prefix ??= options.Prefix ?? string.Empty;
-        prefix = string.Join('/', prefix, "dbx");
+        prefix = prefix.EndsWith('/')
+            ? string.Concat(prefix, "dbx")
+            : string.Join('/', prefix, "dbx");
 
         var group = app.MapGroup(prefix);
         // Administrative Endpoints
@@ -78,7 +80,7 @@ public static class DbxServiceExtensions
         group.MapDelete("{id}/{itemId}", (IDbxService dbx, string id, string itemId, CancellationToken cancellationToken)
             => dbx.DeleteItemAsync(id, itemId, cancellationToken));
 
-        app.Logger.LogInformation("{ServiceName} is running at '{Prefix}/'", nameof(DbxService), prefix);
+        app.Logger.LogInformation("{ServiceName}, running, {Prefix}", nameof(DbxService), prefix);
         return app;
     }
 }

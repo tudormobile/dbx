@@ -54,6 +54,16 @@ public class DbxServiceExtensionsTests
         Assert.AreSame(app, result);
     }
 
+    [TestMethod]
+    public void UseDbx_WithPrefixWithTrailingSlash_RemovesSlash()
+    {
+        // exposes Bug#7; fixed in Release 0.3
+        var prefix = "trailing/slash/";
+        var app = BuildApp();
+        var result = app.UseDbx(prefix); // no error
+
+        Assert.AreSame(app, result);
+    }
 
     private static WebApplication BuildApp()
     {
