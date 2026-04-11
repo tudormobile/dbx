@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
-using System.Text.Json;
+﻿using System.Text.Json;
 
 namespace Tudormobile.Dbx;
 
@@ -29,7 +28,7 @@ public interface IDbxService
     /// </summary>
     /// <param name="id">The collection identifier (64 lowercase hex characters).</param>
     /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
-    /// <returns>A <see cref="DbxResponse"/> containing the identifer status including the item count.</returns>
+    /// <returns>A <see cref="DbxResponse"/> containing the identifier status including the item count.</returns>
     Task<DbxResponse> GetIdStatusAsync(string id, CancellationToken cancellationToken = default);
 
     /// <summary>
