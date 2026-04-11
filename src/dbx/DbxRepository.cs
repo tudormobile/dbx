@@ -40,9 +40,23 @@ internal class DbxRepository
     public async Task<int> CountAllItemIdentifiersAsync(string id, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(id);
-        // *.json files under the id directory
-        var identifiers = await GetIdentifiersAsync(IdDirectory(id), f => Directory.EnumerateFiles(f, "*.json"), cancellationToken);
-        return identifiers.Count;
+        cancellationToken.ThrowIfCancellationRequested();
+
+        var dir = IdDirectory(id);
+        if (!Directory.Exists(dir))
+        {
+            return 0;
+        }
+
+        var count = 0;
+        foreach (var _ in Directory.EnumerateFiles(dir, "*.json"))
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            count++;
+        }
+
+        await Task.CompletedTask;
+        return count;
     }
 
     public async Task<(string ItemId, JsonElement Data)[]> GetAllItemsAsync(string id, CancellationToken cancellationToken = default)
