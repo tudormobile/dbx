@@ -62,15 +62,17 @@ All **dbx** api calls return the response object shown above. In the case of suc
 ## Dbx Endpoints
 The following endpoints are available:
 
-| Name | Method | Path | Description |
-| ---- | ------- | ---- | ----------- |
-| status | GET  | `dbx/status/` | Returns the status of the service |
-| create | POST | `dbx/{id}/` | Creates a new item the indicated identifier |
-| list   | GET  | `dbx/{id}/` | Lists items available for the indicated identifier |
-| read   | GET  | `dbx/{id}/{itemId}` | Retrieves an individual item associated with an identifier |
-| update | PUT  | `dbx/{id}/{itemId}` | Replaces an item |
-| update | PATCH| `dbx/{id}/{itemId}` | Replaces some properties of an item |
-| delete |DELETE| `dbx/{id}/{itemId}` | Deletes an item |
+| Name   | Method | Path | Description |
+| ------ | ------ | ---- | ----------- |
+| status | GET    | `dbx/status/`       | Returns the status of the service |
+| status | GET    | `dbx/status/{id}/`  | Returns status, including a count of items, for an identifier |
+| list   | GET    | `dbx/list/{id}/`    | Lists all item ids available for the indicated identifier |
+| create | POST   | `dbx/{id}/`         | Creates a new item the indicated identifier |
+| read   | GET    | `dbx/{id}`          | Reads items with contents, (100 records max per page) | 
+| read   | GET    | `dbx/{id}/{itemId}` | Retrieves an individual item associated with an identifier |
+| update | PUT    | `dbx/{id}/{itemId}` | Replaces an item |
+| update | PATCH  | `dbx/{id}/{itemId}` | Replaces some properties of an item |
+| delete | DELETE | `dbx/{id}/{itemId}` | Deletes an item |
 ### Response Codes
 - **200 Ok** - returned with success response message in the body; data varies
 - **201 Created** - returned with successful response message; ***itemId*** is in the data field

@@ -4,6 +4,15 @@ GET {{dbx_HostAddress}}/api/v1/dbx/status
 Accept: application/json
 
 ###
+GET {{dbx_HostAddress}}/api/v1/dbx/status/test
+Accept: application/json
+
+###
+GET {{dbx_HostAddress}}/api/v1/dbx/list/test
+Accept: application/json
+
+###
+
 GET {{dbx_HostAddress}}/api/v1/dbx/test/
 Accept: application/json
 

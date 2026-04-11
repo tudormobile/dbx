@@ -61,12 +61,19 @@ public static class DbxServiceExtensions
         group.MapGet("status", (IDbxService dbx, CancellationToken cancellationToken)
             => dbx.GetStatusAsync(cancellationToken));
 
+        group.MapGet("status/{id}", (IDbxService dbx, string id, CancellationToken cancellationToken)
+            => dbx.GetIdStatusAsync(id, cancellationToken));
+
+        // Identifier endpoints
+        group.MapGet("list/{id}", (IDbxService dbx, string id, CancellationToken cancellationToken)
+            => dbx.ListItemsAsync(id, cancellationToken));
+
+        group.MapGet("{id}", (IDbxService dbx, string id, CancellationToken cancellationToken)
+            => dbx.GetItemsAsync(id, cancellationToken));
+
         // CRUD Endpoints
         group.MapPost("{id}", (IDbxService dbx, string id, [FromBody] JsonElement content, CancellationToken cancellationToken)
             => dbx.CreateItemAsync(id, content, cancellationToken));
-
-        group.MapGet("{id}", (IDbxService dbx, string id, CancellationToken cancellationToken)
-            => dbx.ListItemsAsync(id, cancellationToken));
 
         group.MapGet("{id}/{itemId}", (IDbxService dbx, string id, string itemId, CancellationToken cancellationToken)
             => dbx.GetItemAsync(id, itemId, cancellationToken));

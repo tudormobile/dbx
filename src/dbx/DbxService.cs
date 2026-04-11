@@ -48,6 +48,16 @@ internal class DbxService : IDbxService
         });
     }
 
+    public Task<DbxResponse> GetIdStatusAsync(string id, CancellationToken cancellationToken = default)
+    {
+        LogApiRequest();
+        return ExecuteAsync(async () =>
+        {
+            int count = await _repository.CountAllItemIdentifiersAsync(id, cancellationToken);
+            return (object?)new { id, count, };
+        });
+    }
+
     /// <inheritdoc/>
     public Task<DbxResponse> CreateItemAsync(string id, JsonElement content, CancellationToken cancellationToken = default)
     {
@@ -65,6 +75,17 @@ internal class DbxService : IDbxService
     {
         LogApiRequest();
         return ExecuteAsync(async () => (object?)await _repository.GetAllItemIdentifiersAsync(id, cancellationToken));
+    }
+
+    /// <inheritdoc/>
+    public Task<DbxResponse> GetItemsAsync(string id, CancellationToken cancellationToken = default)
+    {
+        LogApiRequest();
+        return ExecuteAsync(async () =>
+        {
+            var items = await _repository.GetAllItemsAsync(id, cancellationToken);
+            return (object?)items.ToDictionary(item => item.ItemId, item => item.Data);
+        });
     }
 
     /// <inheritdoc/>
