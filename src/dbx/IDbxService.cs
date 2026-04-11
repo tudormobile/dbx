@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
-using System.Text.Json;
+﻿using System.Text.Json;
 
 namespace Tudormobile.Dbx;
 
@@ -25,13 +24,13 @@ public interface IDbxService
     Task<DbxResponse> GetStatusAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Creates a new item in the specified collection with a generated identifier.
+    /// Retrieves the identifier status, including the item count.
     /// </summary>
     /// <param name="id">The collection identifier (64 lowercase hex characters).</param>
-    /// <param name="content">The JSON content to store as the item.</param>
     /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
-    /// <returns>A <see cref="DbxResponse"/> whose <c>Data</c> property contains the new item identifier if successful.</returns>
-    Task<DbxResponse> CreateItemAsync(string id, JsonElement content, CancellationToken cancellationToken = default);
+    /// <returns>A <see cref="DbxResponse"/> containing the identifier status including the item count.</returns>
+    Task<DbxResponse> GetIdStatusAsync(string id, CancellationToken cancellationToken = default);
+
     /// <summary>
     /// Lists all item identifiers in the specified collection.
     /// </summary>
@@ -39,6 +38,23 @@ public interface IDbxService
     /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
     /// <returns>A <see cref="DbxResponse"/> whose <c>Data</c> property contains a list of item identifiers.</returns>
     Task<DbxResponse> ListItemsAsync(string id, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Retrieves all items in the specified collection.
+    /// </summary>
+    /// <param name="id">The collection identifier (64 lowercase hex characters).</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
+    /// <returns>A <see cref="DbxResponse"/> whose <c>Data</c> property contains a list of items.</returns>
+    Task<DbxResponse> GetItemsAsync(string id, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Creates a new item in the specified collection with a generated identifier.
+    /// </summary>
+    /// <param name="id">The collection identifier (64 lowercase hex characters).</param>
+    /// <param name="content">The JSON content to store as the item.</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
+    /// <returns>A <see cref="DbxResponse"/> whose <c>Data</c> property contains the new item identifier if successful.</returns>
+    Task<DbxResponse> CreateItemAsync(string id, JsonElement content, CancellationToken cancellationToken = default);
     /// <summary>
     /// Retrieves a specific item from the specified collection.
     /// </summary>

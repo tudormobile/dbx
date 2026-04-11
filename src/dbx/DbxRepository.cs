@@ -16,6 +16,8 @@ namespace Tudormobile.Dbx;
 internal class DbxRepository
 {
     private readonly string _dataPath;
+    private static readonly SemaphoreSlim _fileSemaphore = new(10);
+    private const int MaxItemsToLoad = 100;  // At class level
 
     /// <summary>
     /// Initializes a new instance of the repository.
@@ -35,6 +37,52 @@ internal class DbxRepository
         // *.json files under the id directory
         => GetIdentifiersAsync(IdDirectory(id), f => Directory.EnumerateFiles(f, "*.json"), cancellationToken);
 
+    public async Task<int> CountAllItemIdentifiersAsync(string id, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(id);
+        cancellationToken.ThrowIfCancellationRequested();
+
+        var dir = IdDirectory(id);
+        if (!Directory.Exists(dir))
+        {
+            return 0;
+        }
+
+        var count = 0;
+        foreach (var _ in Directory.EnumerateFiles(dir, "*.json"))
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            count++;
+        }
+
+        await Task.CompletedTask;
+        return count;
+    }
+
+    public async Task<(string ItemId, JsonElement Data)[]> GetAllItemsAsync(string id, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(id);
+        var dir = IdDirectory(id);
+        if (Directory.Exists(dir))
+        {
+            var itemIds = await GetAllItemIdentifiersAsync(id, cancellationToken);
+
+            var tasks = itemIds.Take(MaxItemsToLoad).Select(async itemId =>
+            {
+                await _fileSemaphore.WaitAsync(cancellationToken);
+                try 
+                { 
+                    var data = await GetItemAsync(id, itemId, cancellationToken);
+                    return (itemId, data);
+                }
+                finally { _fileSemaphore.Release(); }
+            });
+            var items = await Task.WhenAll(tasks);
+            return [.. items.Where(item => item.data.HasValue).Select(item => (item.itemId, item.data!.Value))];
+        }
+        return [];
+    }
+
     public Task<bool> ItemExistsAsync(string id, string itemId, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(id);
@@ -51,8 +99,15 @@ internal class DbxRepository
         var itemFile = ItemIdFile(id, itemId);
         if (File.Exists(itemFile))
         {
-            var json = await File.ReadAllTextAsync(itemFile, cancellationToken);
-            return JsonElement.Parse(json);
+            try
+            {
+                var json = await File.ReadAllTextAsync(itemFile, cancellationToken);
+                return JsonElement.Parse(json);
+            }
+            catch (FileNotFoundException)
+            {
+                return null;
+            }
         }
         return null;
     }
